@@ -53,7 +53,7 @@
           @click="$router.push(`/products/${product.id}`)"
         >
           <div class="product-image">
-            <span class="product-emoji">{{ getEmoji(product.name) }}</span>
+            <span class="product-emoji">{{ product.emoji }}</span>
           </div>
           <div class="product-body">
             <div class="flex justify-between items-center mb-1">
@@ -98,21 +98,6 @@ const loading = ref(true)
 const error = ref('')
 const search = ref('')
 const categoryFilter = ref('')
-
-const EMOJIS = {
-  'shirt': '👕', 't-shirt': '👕', 'áo': '👕', 'clothing': '👗',
-  'sneaker': '👟', 'shoe': '👟', 'giày': '👟', 'footwear': '👟',
-  'mug': '☕', 'coffee': '☕', 'cốc': '☕', 'home': '🏠',
-  'phone': '📱', 'laptop': '💻', 'watch': '⌚',
-}
-
-const getEmoji = (name) => {
-  const lower = name.toLowerCase()
-  for (const [key, emoji] of Object.entries(EMOJIS)) {
-    if (lower.includes(key)) return emoji
-  }
-  return '📦'
-}
 
 const getCategoryName = (id) => {
   return categories.value.find(c => c.id === id)?.name || `Cat ${id}`
