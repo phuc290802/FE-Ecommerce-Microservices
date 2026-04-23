@@ -11,6 +11,11 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="7" height="7"/><rect x="15" y="3" width="7" height="7"/><rect x="15" y="14" width="7" height="7"/><rect x="2" y="14" width="7" height="7"/></svg>
           Products
         </router-link>
+        <router-link to="/cart" class="nav-link cart-link" active-class="active">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          <span class="cart-badge" v-if="cartStore.cartCount > 0">{{ cartStore.cartCount }}</span>
+          Cart
+        </router-link>
         <router-link to="/orders" class="nav-link" active-class="active">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
           Orders
@@ -32,24 +37,49 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
 
 const auth = useAuthStore()
+const cartStore = useCartStore()
 const router = useRouter()
 
 const avatarLetter = computed(() => {
   return (auth.userName || auth.userEmail || 'U').charAt(0).toUpperCase()
 })
 
+onMounted(() => {
+  cartStore.fetchCart()
+})
+
 const handleLogout = async () => {
   await auth.logout()
+  cartStore.clearCart()
   router.push('/login')
 }
 </script>
 
 <style scoped>
+.cart-link {
+  position: relative;
+}
+.cart-badge {
+  position: absolute;
+  top: -4px;
+  right: -8px;
+  background: var(--danger);
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 .navbar {
   position: fixed;
   top: 0;

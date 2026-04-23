@@ -91,9 +91,15 @@
             <span class="qty-number">{{ summary.stock_status.quantity }}</span>
             <span class="text-muted text-sm">sản phẩm còn lại</span>
           </div>
-          <button class="btn btn-primary w-full" style="justify-content: center; margin-top: 1rem;" :disabled="!summary.stock_status.available">
-            🛒 Thêm vào giỏ hàng
-          </button>
+          <div class="qty-selector" v-if="summary.stock_status.available">
+            <button class="qty-btn" @click="qty > 1 ? qty-- : null" :disabled="qty <= 1">-</button>
+            <input v-model.number="qty" type="number" min="1" max="summary.stock_status.quantity" class="qty-input">
+            <button class="qty-btn" @click="qty < summary.stock_status.quantity ? qty++ : null">+</button>
+            <button class="btn btn-primary w-full ml-2" @click="addToCart" :disabled="adding">
+              🛒 {{ adding ? 'Đang thêm...' : 'Thêm vào giỏ' }}
+            </button>
+          </div>
+          <button v-else class="btn btn-secondary w-full" disabled>Tạm hết hàng</button>
         </div>
 
         <!-- Category Info -->
@@ -144,6 +150,8 @@ const route = useRoute()
 const summary = ref(null)
 const loading = ref(true)
 const error = ref('')
+const qty = ref(1)
+const adding = ref(false)
 
 const EMOJIS = {
   'shirt': '👕', 't-shirt': '👕', 'clothing': '👗',
@@ -170,6 +178,23 @@ const avgRating = computed(() => {
   return sum / summary.value.reviews.length
 })
 
+import { useCartStore } from '../stores/cart'
+
+const cartStore = useCartStore()
+
+const addToCart = async () => {
+  adding.value = true
+  try {
+    await cartStore.addItem(Number(route.params.id), qty.value)
+    alert(`Đã thêm ${qty.value} sản phẩm vào giỏ!`)
+    qty.value = 1
+  } catch (err) {
+    alert('Thêm giỏ thất bại: ' + err.message)
+  } finally {
+    adding.value = false
+  }
+}
+
 onMounted(async () => {
   const id = route.params.id
   try {
@@ -178,7 +203,13 @@ onMounted(async () => {
     })
     summary.value = res.data
   } catch (err) {
-    error.value = err.response?.data?.trim() || err.message
+    const status = err.response?.status
+    const msg = err.response?.data?.trim() || err.message
+    if (status >= 400 && status < 600 || msg.includes('stock') || msg.includes('404') || msg.includes('failed') || msg.includes('upstream')) {
+      error.value = 'Sản phẩm không tồn tại hoặc tạm thời không khả dụng. Vui lòng thử sản phẩm khác.'
+    } else {
+      error.value = msg
+    }
   } finally {
     loading.value = false
   }
@@ -186,6 +217,48 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.qty-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.qty-btn {
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.qty-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(255,255,255,0.2);
+}
+.qty-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.qty-input {
+  width: 60px;
+  height: 40px;
+  background: rgba(255,255,255,0.05);
+  border: 2px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+  font-size: 1rem;
+}
+.qty-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
+}
 .loading-state {
   text-align: center;
   padding: 5rem 2rem;

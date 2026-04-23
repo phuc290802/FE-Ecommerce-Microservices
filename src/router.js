@@ -25,6 +25,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/cart',
+    component: () => import('./pages/CartPage.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
     path: '/orders',
     component: () => import('./pages/OrdersPage.vue'),
     meta: { requiresAuth: true }
@@ -75,3 +80,4 @@ router.beforeEach((to) => {
 })
 
 export default router
+
